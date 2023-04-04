@@ -575,27 +575,147 @@
         (SELECT AVG(invoice_total)
             FROM invoices) AS invoice_average,
         invoice_total - (SELECT invoice_average) AS difference
-
+    FROM invoices
     ```
     
 9.  Subqueries in the FROM Clause
     ```SQL 
-
+    SELECT * 
+    FROM (
+        -- SUB QUERY 
+        SELECT client_id,
+        (SELECT AVG(invoice_total)
+            FROM invoices) AS invoice_average,
+        invoice_total - (SELECT invoice_average) AS difference
+        FROM client c
+    )
     ```
 
 # Essential MySQL Functions
 
 1. Numeric Functions
+    ```sql
+    SELECT  ROUND(5.73)         -- 6
+            ROUND(5.73, 1)      -- 5.7
+            TRUNCATE(5.73, 1)   -- 5.7 -- REMOVE 3
+            CEILING(5.2)        -- 6
+            FLOOR(5.2)          -- 5
+            ABS(5.2)            -- 5.2
+            ABS(-5.2)           -- 5.2
+            RAND()              -- random
+    ```
+
 2. String Functions
+    ```sql 
+    SELECT  
+        LOWER('SKY')                        -- sky
+        UPPER('sky')                        -- SKY
+        LTRIM('   sky')                     -- sky
+        RTRIM('sky     ')                   -- sky
+        RTRIM('   sky     ')                -- sky
+        RIGHT('Kindergaren', 6)             -- garen
+        LEFT('Kindergaren', 4)              -- Kind
+        SUBSTRING('Kindergaren', 3, 5)      -- nderg
+        SUBSTRING('Kindergaren', 3)         -- ndergaren
+        LOCATE('garten','Kindergaren')      -- 7        -- starts at 0, return 0 if not found, return first match of char or chars
+        REPLACE('Kindergaren','garen', 'X') -- KinderX
+        CONCAT('first', 'last')             -- firstlast
+        CONCAT(first_name, '', last_name) AS full_name
+    FROM customers
+    ```
+    
 3. Date Functions in MySQL
+
+    ```sql 
+    SELECT 
+        NOW(),          -- 2023-04-03 11:02:30
+        CURDATE(),      -- 2023-04-03 
+        CURTIME(),      -- 11:02:30
+
+        YEAR(NOW())     -- 2023
+        HOUR(NOW())     -- 11
+        SECOND(NOW())   --30
+        DAYNAME(NOW()) -- Monday
+        MONTHNAME(NOW()) -- April
+
+        EXTRACT(YEAR FROM NOW())    -- 2023
+
+    SELECT *
+    FROM orders
+    WHERE YEAR(oreder_date) = YEAR(NOW())
+    ```
+    
 4. Formatting Dates and Times
+    ```sql 
+    '2023-04-04'
+    SELECT DATE_FORMAT(NOW(), '%M %D %Y %H:%i %p' )
+    ```
+    
 5. Calculating Dates and Times
+    ```sql 
+    SELECT DATE_ADD(NOW(), INTERVAL 1 YEAR)
+    SELECT DATE_ADD(NOW(), INTERVAL -1 YEAR)
+
+    SELECT DATE_SUB(NOW(), INTERVAL 1 YEAR)
+
+    SELECT DATEDIFF('2023-03-02', '2023-04-04')             -- IN DAYS
+    SELECT DATEDIFF('2019-03-02 09:00', '2023-04-04 08:00') -- IN DAYS 
+
+    SELECT TIME_TO_SEC('09:00') - TIME_TO_SEC('09:02')      -- -120
+
+    ```
+    
 6. The IFNULL and COALESCE Functions
+    ```sql 
+    SELECT 
+        order_id, 
+        IFNULL (shipper_id, 'Not Assigned') AS shipper
+    FROM 
+        orders
+
+    SELECT 
+        order_id, 
+        COALESCE(shipper_id, 'Not Assigned') AS shipper
+    FROM 
+        orders
+
+    ```
+    
 7. The IF Function
+    ```sql 
+    SELECT 
+        order_id,
+        order_date,
+        IF(
+            YEAR(order_date) = YEAR(NOW()), --statement
+            'active',                       --true
+            'archived'                      --false
+        ) AS frequency
+    FROM 
+        orders
+    ```
+    
 8. The CASE Operator 
+    ```sql 
+    SELECT 
+        order_id,
+        CASE 
+            WHEN YEAR(order_date) = YEAR(NOW()) THEN 'Active'
+            WHEN YEAR(order_date) = YEAR(NOW()) - 1 THEN 'Last year'
+            WHEN YEAR(order_date) < YEAR(NOW()) - 1 THEN 'Archived'
+            ELSE 'FUTURE'
+        END AS category
+    FROM 
+        orders
+    ```
+    
 
 # Views
 1. Creating Views 
+    - view dont store data, 
+    - we can use view the same way as table 
+    - view are created with query
+
 2. Altering or Dropping Views 
 3. Updatable Views 
 4. THE WITH OPTION CHECK Clause
@@ -648,6 +768,7 @@
 7. Date and Time Types
 8. Blob Types
 9. JSON Type 
+
 
 # Designing Databases
  
