@@ -821,7 +821,7 @@
     ```
 
 6. Parameters with Default Value
-     ```SQL 
+    ```SQL 
     DELIMITER $$
     CREATE PROCEDURE get_client_by_prov (
         prov CHAR(2)
@@ -838,7 +838,7 @@
     DELIMITER ;
     ```
     
-     ```SQL 
+    ```SQL 
     DELIMITER $$
     CREATE PROCEDURE get_client_by_prov (
         prov CHAR(2)
@@ -869,35 +869,150 @@
     ```
 
 7. Parameter Validation
+    - keep validtion minimal, perform validtion in application code instead
+
+    ```SQL
+    CREATE PROCEDURE make_payment(
+        invoice_id INT,
+        payment_amount DECIMAL(9,2),
+        payment_date DATE
+    )
+    BEGIN   
+        IF payment_amount <= 0 THEN                         -- validation
+            SIGNAL SQLSTATE '22003'                         -- error status
+            SET MESSAGE_TEXT = 'Invalid payment amount';    -- error message
+        END IF ;                                            -- end validation 
+
+        UPDATE invoices i 
+        SET 
+            i. payment_total = payment_amount,
+            i.payment_date = payment_date,
+        WHERE i.invoice_id = invoice_id;
+    END 
+    ```
 
 8. Output Parameters 
+    - avoid using output params if possible.
+    - Session based
+
+    ```sql 
+    CREATE PROCEDURE get_unpaid_for_client (
+        client_id INT, 
+        OUT invoices_count INT              -- delcare output params
+        OUT invoices_total DECIMAL(9,2)     
+    )
+    BEGIN 
+        SELECT COUNT(*), SUM(invoice_total)
+        INTO invoices_count, invoices_total -- select values into out params
+        FROM invoices i 
+        WHERE i.client_id = client_id 
+            AND payment_total = 0
+    END 
+    ```
 
 9. Variables 
+    - user variable  : SET @invoices_count = 0  
+        - Session based
+    - local variable : DECLARE risk_factor DECIMAL(9,2) DEFAULT 0 
+        - procedure based
+    ```SQL 
+    CREATE PROCEDURE get_risk_factor (
+        BEGIN 
+            DECLARE risk_factor DECIMAL(9,2) DEFAULT 0;             --DECLARE LOCAL VAR
+            DECLARE invoices_total DECIMAL(9,2);
+            DECLARE invoices_count INT;
+
+            SELECT COUNT(*), SUM(invoices_total)
+            INTO invoices_count, invoices_total                     -- SLECT VALUE INTO PARAMS
+            FROM invoices;
+
+            SET risk_factor = invoices_total / invoices_count * 5;  -- SET VALUE
+            SELECT risk_factor;                                     -- SELECT LOCAL VAR
+        END
+    )
+
+    ```
 
 10. Functions 
+    - functions are similar to procedures 
+    - function can only return a single value 
+    - function must return a value 
+    - function must has at least one attribute 
 
-11. Other Conventions 
+    ```sql 
+    CREATE FUNCTION get_riskfactor_for_client (
+        client_id INT
+    )
+    RETURN INTEGER          -- Type of value, this function returns 
+    READS SQL DATA
+    -- DETERMINISTIC       -- PURE
+    -- MODIFIES SQL DATA
+    BEGIN 
+        DECLARE risk_factor DECIMAL(9,2) DEFAULT 0;             --DECLARE LOCAL VAR
+        DECLARE invoices_total DECIMAL(9,2);
+        DECLARE invoices_count INT;
+
+        SELECT COUNT(*), SUM(invoices_total)
+        INTO invoices_count, invoices_total                     -- SLECT VALUE INTO PARAMS
+        FROM invoices i;
+        WHERE i.client_iid = client_id
+
+        SET risk_factor = invoices_total / invoices_count * 5;  -- SET VALUE
+
+        RETURN IFNULL(risk_factor, 0);
+    END
+    ```
+    
+    - use it eleswhere
+    
+    ```sql 
+    SELECT 
+        client_id,
+        get_riskfactor_for_client(client_id) AS risk_factor      
+    FROM clients
+    ```
+
+    ```SQL 
+    DROP FUNCTION IF EXISTS get_riskfactor_for_client;
+    ```
 
 # Triggers and Events
 
 1. Triggers
+    - DEF: SQL CMD that gets executed upon insert, update or delete 
+
 2. Viewing Triggers
+
 3. Dropping Triggers
+
 4. Using Triggers for Auditing
+
 5. Events
+    - DEF: SQL CMD that gets executed according to a SCHEDULE
+
 6. Viewing, Dropping and Altering Events
+
 
 # Transactions and Concurrency
 
 1. Transactions
+
 2. Creating Transactions
+
 3. Concurrency and Locking
+
 4. Concurrency Problems
+
 5. Transaction Isolation Levels
+
 6. READ UNCOMMITTED Isolation Level
+
 7. READ COMMITTED Isolation Level
+
 8. REPEATABLE READ Isolation Level
+
 9. SERIALIZABLE Isolation Level
+  
 10. Deadlocks
 
 # Data Type
