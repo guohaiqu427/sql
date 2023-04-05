@@ -712,27 +712,170 @@
 
 # Views
 1. Creating Views 
+    - useful when using multiple query or subuery --> save it in the view
+    - view are created with query
     - view dont store data, 
     - we can use view the same way as table 
-    - view are created with query
+    - save views in git source control
+    
+    ```SQL 
+    USE sql_invoicing;                  -- use
+    CREATE VIEW sales_by_client AS      -- create       --  CREATE OR REPLACE VIEW ....
+    SELECT                              -- query 
+        c.client_id,
+        c.name,
+        SUM(invoice_total) AS total
+    FROM clients c
+    JOIN invoices i USING(client_id)
+    GROUP BY client_id, name
+
+    ```
 
 2. Altering or Dropping Views 
+    ```sql
+    DROP VIEW sales_by_client
+    ```
+
 3. Updatable Views 
+    - if the view DOES NOT include the follwing, it is a updateable VIEW
+        - DISTINCT 
+        - AGGREGATE FNS  (MIN, MAX, SUM ...) 
+        - GROUP BY / HAVINIG
+        - UNION 
+    ```sql 
+    -- 1
+    DELETE FROM invoices_with_balance
+    WHERE invoice_id = 1
+
+    -- 2
+    UPDATE invoices_with_balance
+    SET due_date = DATE_ADD(due_date, INTERVAL 2 DAY)
+    WHERE invoice_id = 1
+    ```
+    
+
 4. THE WITH OPTION CHECK Clause
+    - WHEN DELETE OR UPDATE VIEWS, SOME ROWS MAY DISPAIR, USE ... WITH CHECK OPTION
+    ```SQL
+    CREATE OR REPLACE VIEW view_name 
+    SELECT 
+        invoice_id,
+        invoice_total,
+        payment_total,
+        invoice_total - payment_total AS balance
+    FROM invoices
+    WHERE (invoice_total - payment_total) > 0   -- SOME ROWS MAY DISPAIR, if we make this <= 0, the row dispair
+    WITH CHECK OPTION                           -- prevent it from dispairing 
+    ```
+
 5. Other Benefits of Views
+    - simplify queries
+    - reduce impact of changes 
+    - restrict access to data 
 
 # Stored Procedures
 
 1. What are Stored Procedures
+    - seperate SQL code from application code 
+    - stored procedure is a database object that contains SQL code
+    - calls Procedure code in application code 
+    - benefits: ORGANIZE | FAST EXECUTION | DATA SECURITY
+
 2. Creating a Stored Procedure 
+    - DELIMITER change and restore
+    - create and wrap
+    - end statement 
+    ```SQL 
+    DELIMITER $$
+    CREATE PROCEDURE get_clients()
+    BEGIN
+        SELECT * 
+            FROM clients;
+    END
+    DELIMITER ;
+    ```
+
 3. Creating Procedures Using MySQLWorkbench 
+    - let MySQLWorkbench do the syntax, we focus on the query. 
+    - right click stored procedures > create
+
 4. Dropping Stored Procedures 
+    ```SQL
+    DROP PROCEDURE get_clients
+    DROP PROCEDURE IF EXISTS get_clients
+    ```
+
 5. Parameters
+    - all params are required in sql 
+    ```SQL 
+    DELIMITER $$
+    CREATE PROCEDURE get_client_by_prov (
+        prov CHAR(2)
+    )
+    BEGIN
+        SELECT *
+        FROM client c 
+        WHERE c.prov = prov
+    END
+    DELIMITER ;
+    ```
+
 6. Parameters with Default Value
+     ```SQL 
+    DELIMITER $$
+    CREATE PROCEDURE get_client_by_prov (
+        prov CHAR(2)
+    )
+    BEGIN
+        IF prov IS NULL THEN
+            SET state = 'CA';
+        END IF;
+
+        SELECT *
+        FROM client c 
+        WHERE c.prov = prov
+    END $$
+    DELIMITER ;
+    ```
+    
+     ```SQL 
+    DELIMITER $$
+    CREATE PROCEDURE get_client_by_prov (
+        prov CHAR(2)
+    )
+    BEGIN
+        IF prov IS NULL THEN
+            SELECT * FROM clients; 
+        ELSE 
+            SELECT *
+            FROM client c 
+            WHERE c.prov = prov;
+        END IF;
+    END $$
+    DELIMITER ;
+    ```
+
+    ```SQL 
+    DELIMITER $$
+    CREATE PROCEDURE get_client_by_prov (
+        prov CHAR(2)
+    )
+    BEGIN
+        SELECT *
+        FROM client c 
+        WHERE c.prov = IFNULL(prov, c.prov)
+    END $$
+    DELIMITER ; 
+    ```
+
 7. Parameter Validation
+
 8. Output Parameters 
+
 9. Variables 
+
 10. Functions 
+
 11. Other Conventions 
 
 # Triggers and Events
