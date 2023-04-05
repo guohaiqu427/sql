@@ -1017,7 +1017,7 @@
 
 # Data Type
 
-1. Introduction
+1. 
 2. String Types
 3. Integer Types
 4. Fixed-point and Floating-point Types
