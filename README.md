@@ -1016,7 +1016,6 @@
 10. Deadlocks
 
 # Data Type
-
 1. 
 2. String Types
 3. Integer Types
@@ -1026,7 +1025,6 @@
 7. Date and Time Types
 8. Blob Types
 9. JSON Type 
-
 
 # Designing Databases
  
@@ -1087,3 +1085,5 @@
  6. Granting Privileges
  7. Viewing Privileges
  8. Revoking Privileges
+
+
